@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getLeadDetail } from '@/features/leads/leads.repository'
 import { getLeadNotes } from '@/features/leads/lead-notes.repository'
 import { getProfile } from '@/features/profile/profile.repository'
-import { MockAiSummaryAdapter } from '@/adapters/ai-summary/mock-ai-summary.adapter'
+import { createAiSummaryAdapter } from '@/adapters/ai-summary'
 import { LeadStatusActions } from '@/features/leads/components/LeadStatusActions'
 import { LeadNotes } from '@/features/leads/components/LeadNotes'
 import type { LeadScore, AuditEvent } from '@/types/domain'
@@ -183,10 +183,6 @@ function ActivityTimeline({ events }: { events: AuditEvent[] }) {
   )
 }
 
-// ─── Adapter instance (module-level singleton for Server Component) ────────────
-
-const aiSummaryAdapter = new MockAiSummaryAdapter()
-
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default async function LeadDetailPage({
@@ -209,8 +205,9 @@ export default async function LeadDetailPage({
 
   if (!lead) notFound()
 
+  const aiAdapter = await createAiSummaryAdapter()
   const [aiSummary, notes] = await Promise.all([
-    aiSummaryAdapter.summarize({ lead, profile }).catch(() => null),
+    aiAdapter.summarize({ lead, profile }).catch(() => null),
     getLeadNotes(supabase, id).catch(() => []),
   ])
 
