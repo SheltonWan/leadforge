@@ -1,0 +1,12 @@
+# Vercel deployment — ignore files that should not be uploaded
+.git
+.github
+node_modules
+supabase
+docs
+*.md
+!README.md
+.env
+.env.*
+!.env.example
+coverage
