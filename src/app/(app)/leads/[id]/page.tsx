@@ -3,9 +3,11 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getLeadDetail } from '@/features/leads/leads.repository'
+import { getLeadNotes } from '@/features/leads/lead-notes.repository'
 import { getProfile } from '@/features/profile/profile.repository'
 import { MockAiSummaryAdapter } from '@/adapters/ai-summary/mock-ai-summary.adapter'
 import { LeadStatusActions } from '@/features/leads/components/LeadStatusActions'
+import { LeadNotes } from '@/features/leads/components/LeadNotes'
 import type { LeadScore, AuditEvent } from '@/types/domain'
 
 export const metadata: Metadata = { title: '线索详情' }
@@ -207,7 +209,10 @@ export default async function LeadDetailPage({
 
   if (!lead) notFound()
 
-  const aiSummary = await aiSummaryAdapter.summarize({ lead, profile }).catch(() => null)
+  const [aiSummary, notes] = await Promise.all([
+    aiSummaryAdapter.summarize({ lead, profile }).catch(() => null),
+    getLeadNotes(supabase, id).catch(() => []),
+  ])
 
   const source = lead.lead_sources
   const score = lead.lead_scores
@@ -361,6 +366,11 @@ export default async function LeadDetailPage({
           {/* Activity */}
           <SectionCard title="活动记录">
             <ActivityTimeline events={lead.audit_events} />
+          </SectionCard>
+
+          {/* Notes */}
+          <SectionCard title="跟进备注">
+            <LeadNotes leadId={lead.id} initialNotes={notes} />
           </SectionCard>
         </div>
       </div>

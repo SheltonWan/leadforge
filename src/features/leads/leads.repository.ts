@@ -173,3 +173,43 @@ export async function updateLeadStatus(
   return data
 }
 
+export type PipelineLead = {
+  id: string
+  title: string
+  status: Lead['status']
+  overall_score: number | null
+  updated_at: string
+}
+
+/**
+ * Fetch all active leads for the pipeline view.
+ * Returns minimal fields needed for pipeline cards, ordered by score desc.
+ */
+export async function getLeadsForPipeline(
+  supabase: SupabaseDb,
+  userId: string,
+): Promise<PipelineLead[]> {
+  const { data, error } = await supabase
+    .from('leads')
+    .select('id, title, status, updated_at, lead_scores(overall_score)')
+    .eq('user_id', userId)
+    .not('status', 'in', '("ignored","blacklisted")')
+    .order('updated_at', { ascending: false })
+    .limit(200)
+
+  if (error) throw error
+
+  return (data ?? []).map((row) => {
+    const score = Array.isArray(row.lead_scores)
+      ? (row.lead_scores[0] as { overall_score: number } | undefined)?.overall_score ?? null
+      : (row.lead_scores as { overall_score: number } | null)?.overall_score ?? null
+    return {
+      id: row.id,
+      title: row.title,
+      status: row.status,
+      overall_score: score,
+      updated_at: row.updated_at,
+    }
+  })
+}
+
