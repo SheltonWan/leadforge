@@ -22,6 +22,7 @@ export class OpenAiSummaryAdapter implements AiSummaryAdapter {
   constructor() {
     this.client = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
+      ...(process.env.OPENAI_BASE_URL ? { baseURL: process.env.OPENAI_BASE_URL } : {}),
     })
   }
 

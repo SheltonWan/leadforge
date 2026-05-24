@@ -13,6 +13,7 @@ const envSchema = z.object({
   // Server-only — optional in Milestone 1
   SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
   OPENAI_API_KEY: z.string().optional(),
+  OPENAI_BASE_URL: z.string().url().optional(),
 })
 
 export type Env = z.infer<typeof envSchema>
