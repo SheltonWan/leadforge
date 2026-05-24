@@ -1,12 +1,19 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/database'
-import type { Lead } from '@/types/domain'
+import type { Lead, LeadSource, LeadScore, AuditEvent } from '@/types/domain'
 import type { LeadCreateData } from './leads.types'
 
 type SupabaseDb = SupabaseClient<Database, 'public'>
 
 export type LeadWithSource = Lead & {
   lead_sources: { risk_level: 'low' | 'medium' | 'high'; source_type: string } | null
+}
+
+/** Full lead detail including joined source, score, and recent audit events. */
+export type LeadDetail = Lead & {
+  lead_sources: LeadSource | null
+  lead_scores: LeadScore | null
+  audit_events: AuditEvent[]
 }
 
 function extractSourceName(sourceUrl: string): string {
@@ -109,3 +116,60 @@ export async function getLeads(
 
   return { leads, total: count ?? 0 }
 }
+
+/**
+ * Fetch a single lead with its full related data:
+ * lead_sources, lead_scores, and the 10 most recent audit events.
+ * Returns null if the lead does not exist or belongs to another user.
+ */
+export async function getLeadDetail(
+  supabase: SupabaseDb,
+  userId: string,
+  leadId: string,
+): Promise<LeadDetail | null> {
+  const [{ data: lead, error: leadError }, { data: events }] = await Promise.all([
+    supabase
+      .from('leads')
+      .select('*, lead_sources(*), lead_scores(*)')
+      .eq('id', leadId)
+      .eq('user_id', userId)
+      .single(),
+    supabase
+      .from('audit_events')
+      .select('*')
+      .eq('lead_id', leadId)
+      .order('created_at', { ascending: false })
+      .limit(10),
+  ])
+
+  if (leadError) {
+    if (leadError.code === 'PGRST116') return null
+    throw leadError
+  }
+  if (!lead) return null
+
+  return {
+    ...(lead as unknown as Lead & { lead_sources: LeadSource | null; lead_scores: LeadScore | null }),
+    audit_events: (events ?? []) as AuditEvent[],
+  }
+}
+
+/** Update a lead's status. Enforces ownership via user_id. */
+export async function updateLeadStatus(
+  supabase: SupabaseDb,
+  userId: string,
+  leadId: string,
+  status: Lead['status'],
+): Promise<Lead> {
+  const { data, error } = await supabase
+    .from('leads')
+    .update({ status, updated_at: new Date().toISOString() })
+    .eq('id', leadId)
+    .eq('user_id', userId)
+    .select()
+    .single()
+
+  if (error) throw error
+  return data
+}
+
