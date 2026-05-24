@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { getLeadDetail, updateLeadStatus } from '@/features/leads/leads.repository'
+import { writeAuditEvent } from '@/features/audit/audit.repository'
 
 type RouteContext = { params: Promise<{ id: string }> }
 
@@ -117,6 +118,15 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     }
 
     const lead = await updateLeadStatus(supabase, user.id, id, parsed.data.status)
+
+    // Write audit event (fire-and-forget)
+    const eventType =
+      parsed.data.status === 'approved' ? 'lead_approved' :
+      parsed.data.status === 'ignored' ? 'lead_ignored' :
+      parsed.data.status === 'blacklisted' ? 'blacklisted' :
+      'status_changed'
+    void writeAuditEvent(supabase, user.id, id, eventType, { status: parsed.data.status })
+
     return NextResponse.json({ lead })
   } catch (err) {
     console.error('[PATCH /api/leads/[id]]', err)

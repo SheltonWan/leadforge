@@ -6,6 +6,7 @@ import { getProfile } from '@/features/profile/profile.repository'
 import { getDraft, upsertDraft } from '@/features/drafts/drafts.repository'
 import { checkSuppressed } from '@/features/suppression/suppression.repository'
 import { MockOutreachDraftAdapter } from '@/adapters/outreach-draft/mock-outreach-draft.adapter'
+import { writeAuditEvent } from '@/features/audit/audit.repository'
 
 const draftAdapter = new MockOutreachDraftAdapter()
 
@@ -85,6 +86,11 @@ export async function POST(
   if (lead.status === 'approved') {
     await updateLeadStatus(supabase, user.id, id, 'draft_created')
   }
+
+  // Fire-and-forget audit event
+  void writeAuditEvent(supabase, user.id, id, 'draft_generated', {
+    model_version: result.model_version,
+  })
 
   return NextResponse.json({ draft }, { status: 200 })
 }

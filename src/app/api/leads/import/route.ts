@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { bulkImportSchema } from '@/features/leads/leads.types'
 import { createLead } from '@/features/leads/leads.repository'
+import { writeAuditEvent } from '@/features/audit/audit.repository'
 
 export async function POST(request: Request) {
   try {
@@ -45,8 +46,13 @@ export async function POST(request: Request) {
 
     for (const row of parsed.data.rows) {
       try {
-        await createLead(supabase, user.id, row)
+        const lead = await createLead(supabase, user.id, row)
         created++
+        // Fire-and-forget audit event per imported lead
+        void writeAuditEvent(supabase, user.id, lead.id, 'lead_imported', {
+          title: lead.title,
+          risk_level: row.risk_level,
+        })
       } catch (e) {
         errors.push(`"${row.title}": ${e instanceof Error ? e.message : '未知错误'}`)
       }

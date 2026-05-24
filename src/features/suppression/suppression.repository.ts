@@ -50,6 +50,21 @@ export async function deleteSuppressionEntry(
 }
 
 /**
+ * Pure helper: given a normalised hostname and a list of suppression entries,
+ * return the first matching entry (exact domain or subdomain match).
+ * Exported for unit testing.
+ */
+export function isDomainSuppressed(
+  hostname: string,
+  entries: SuppressionEntry[],
+): SuppressionEntry | null {
+  const match = entries.find(
+    (e) => e.type === 'domain' && (hostname === e.value || hostname.endsWith(`.${e.value}`)),
+  )
+  return match ?? null
+}
+
+/**
  * Check if a given source URL or contact domain is suppressed.
  * Returns the matching entry, or null if not suppressed.
  */
@@ -76,8 +91,5 @@ export async function checkSuppressed(
   if (error) throw error
   if (!data?.length) return null
 
-  const match = data.find(
-    (e) => hostname === e.value || hostname.endsWith(`.${e.value}`),
-  )
-  return match ?? null
+  return isDomainSuppressed(hostname, data as SuppressionEntry[])
 }

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getDraft, recordDraftCopied } from '@/features/drafts/drafts.repository'
 import { getLeadDetail } from '@/features/leads/leads.repository'
+import { writeAuditEvent } from '@/features/audit/audit.repository'
 
 export async function POST(
   _req: Request,
@@ -19,5 +20,6 @@ export async function POST(
   if (!draft) return NextResponse.json({ error: { code: 'DRAFT_NOT_FOUND', message: '草稿不存在' } }, { status: 404 })
 
   await recordDraftCopied(supabase, draft.id)
+  void writeAuditEvent(supabase, user.id, id, 'draft_copied')
   return NextResponse.json({ ok: true })
 }
