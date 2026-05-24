@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getLeadDetail } from '@/features/leads/leads.repository'
 import { getProfile } from '@/features/profile/profile.repository'
 import { getDraft } from '@/features/drafts/drafts.repository'
+import { checkSuppressed } from '@/features/suppression/suppression.repository'
 import { DraftEditor } from '@/features/drafts/components/DraftEditor'
 
 export const metadata: Metadata = { title: '外联草稿' }
@@ -32,11 +33,16 @@ export default async function LeadDraftPage({
 
   if (!lead) notFound()
 
+  // T-015: check suppression after we have the lead's source_url
+  const suppressed = await checkSuppressed(supabase, user.id, lead.source_url)
+
   // ── T-012 gate evaluation ─────────────────────────────────────────────────
   let blockReason: string | null = null
 
   if (lead.compliance_status === 'blocked') {
     blockReason = '该线索合规状态为"已阻止"，无法生成草稿。请先在线索详情中解除风险后再操作。'
+  } else if (suppressed) {
+    blockReason = `该线索来源域名（${suppressed.value}）在屏蔽名单中，无法生成草稿。如需解除，请前往"屏蔽名单"删除对应条目。`
   } else if (!DRAFT_ALLOWED_STATUSES.has(lead.status)) {
     blockReason = '草稿生成仅在线索被批准后可用。请返回线索详情并批准该线索。'
   } else if (!profile?.website_url?.trim()) {

@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getLeadDetail, updateLeadStatus } from '@/features/leads/leads.repository'
 import { getProfile } from '@/features/profile/profile.repository'
 import { getDraft, upsertDraft } from '@/features/drafts/drafts.repository'
+import { checkSuppressed } from '@/features/suppression/suppression.repository'
 import { MockOutreachDraftAdapter } from '@/adapters/outreach-draft/mock-outreach-draft.adapter'
 
 const draftAdapter = new MockOutreachDraftAdapter()
@@ -64,6 +65,15 @@ export async function POST(
     return NextResponse.json(
       { error: { code: 'MISSING_WEBSITE', message: '请先在服务商档案中填写官网地址，再生成草稿。' } },
       { status: 422 },
+    )
+  }
+
+  // T-015 gate: source domain must not be suppressed
+  const suppressed = await checkSuppressed(supabase, user.id, lead.source_url)
+  if (suppressed) {
+    return NextResponse.json(
+      { error: { code: 'SUPPRESSED', message: `该线索来源域名（${suppressed.value}）在屏蔽名单中，无法生成草稿。` } },
+      { status: 403 },
     )
   }
 

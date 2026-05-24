@@ -21,8 +21,19 @@ export function DraftEditor({ leadId, initialDraft, canGenerate, blockReason }: 
   const [error, setError] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
   const [isDirty, setIsDirty] = useState(false)
+  // T-014: guard before overwriting a sent draft
+  const [pendingRegen, setPendingRegen] = useState(false)
 
   // ── Generate / Regenerate ─────────────────────────────────────────────────
+
+  function handleGenerateClick() {
+    if (draft?.status === 'sent' && !pendingRegen) {
+      setPendingRegen(true)
+      return
+    }
+    setPendingRegen(false)
+    void handleGenerate()
+  }
 
   async function handleGenerate() {
     setError(null)
@@ -81,6 +92,8 @@ export function DraftEditor({ leadId, initialDraft, canGenerate, blockReason }: 
 
     // Record copy event
     await fetch(`/api/leads/${leadId}/draft/copy`, { method: 'POST' }).catch(() => null)
+    // T-014: optimistic local state update
+    setDraft((prev) => prev ? { ...prev, status: 'copied', copied_at: new Date().toISOString() } : prev)
     setSuccessMsg('已复制到剪贴板')
     setTimeout(() => setSuccessMsg(null), 2500)
     startTransition(() => router.refresh())
@@ -96,6 +109,8 @@ export function DraftEditor({ leadId, initialDraft, canGenerate, blockReason }: 
       setError('标记失败，请稍后重试')
       return
     }
+    // T-014: optimistic local state update
+    setDraft((prev) => prev ? { ...prev, status: 'sent', sent_at: new Date().toISOString() } : prev)
     setSuccessMsg('已标记为已发送，线索状态已更新')
     setTimeout(() => setSuccessMsg(null), 3000)
     startTransition(() => router.refresh())
@@ -120,12 +135,27 @@ export function DraftEditor({ leadId, initialDraft, canGenerate, blockReason }: 
       <div className="flex flex-wrap items-center gap-2">
         {canGenerate && (
           <button
-            onClick={handleGenerate}
+            onClick={handleGenerateClick}
             disabled={isPending}
             className="rounded-md bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-700 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-1"
           >
             {isPending ? '处理中…' : draft ? '重新生成草稿' : '生成草稿'}
           </button>
+        )}
+
+        {/* T-014: regen confirmation when draft was already sent */}
+        {pendingRegen && (
+          <div role="alert" className="flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs text-amber-700">
+            <span>草稿已标记发送，确认覆盖？</span>
+            <button
+              onClick={() => { setPendingRegen(false); void handleGenerate() }}
+              className="font-medium underline hover:text-amber-900"
+            >确认</button>
+            <button
+              onClick={() => setPendingRegen(false)}
+              className="hover:text-amber-900"
+            >取消</button>
+          </div>
         )}
 
         {draft && (
@@ -176,6 +206,16 @@ export function DraftEditor({ leadId, initialDraft, canGenerate, blockReason }: 
           {draft.generated_at && <span>生成时间：{new Date(draft.generated_at).toLocaleString('zh-CN')}</span>}
           {draft.copied_at && <span>复制时间：{new Date(draft.copied_at).toLocaleString('zh-CN')}</span>}
           {draft.sent_at && <span>发送时间：{new Date(draft.sent_at).toLocaleString('zh-CN')}</span>}
+        </div>
+      )}
+
+      {/* T-014: sent status info banner */}
+      {draft?.status === 'sent' && (
+        <div
+          role="status"
+          className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700"
+        >
+          此草稿已标记为发送{draft.sent_at ? `（${new Date(draft.sent_at).toLocaleString('zh-CN')}）` : ''}。您仍可编辑保存修订版本，或重新生成新草稿。
         </div>
       )}
 
