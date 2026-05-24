@@ -5,17 +5,11 @@
 -- NOTE: Apply RLS policies (commented out at bottom) BEFORE going to production.
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- Extensions
--- ─────────────────────────────────────────────────────────────────────────────
-
-create extension if not exists "uuid-ossp";
-
--- ─────────────────────────────────────────────────────────────────────────────
 -- User Profiles
 -- ─────────────────────────────────────────────────────────────────────────────
 
 create table if not exists user_profiles (
-  id            uuid        primary key default uuid_generate_v4(),
+  id            uuid        primary key default gen_random_uuid(),
   user_id       uuid        not null unique references auth.users (id) on delete cascade,
   company_name  text        not null default '',
   website_url   text        not null default '',   -- Required for draft generation
@@ -34,7 +28,7 @@ create table if not exists user_profiles (
 -- ─────────────────────────────────────────────────────────────────────────────
 
 create table if not exists lead_sources (
-  id                uuid        primary key default uuid_generate_v4(),
+  id                uuid        primary key default gen_random_uuid(),
   user_id           uuid        not null references auth.users (id) on delete cascade,
   name              text        not null,
   source_type       text        not null check (source_type in ('csv_import','manual','public_source','mock_adapter')),
@@ -51,7 +45,7 @@ create table if not exists lead_sources (
 -- ─────────────────────────────────────────────────────────────────────────────
 
 create table if not exists leads (
-  id                 uuid        primary key default uuid_generate_v4(),
+  id                 uuid        primary key default gen_random_uuid(),
   user_id            uuid        not null references auth.users (id) on delete cascade,
   source_id          uuid        references lead_sources (id) on delete set null,
   title              text        not null,
@@ -74,7 +68,7 @@ create table if not exists leads (
 -- ─────────────────────────────────────────────────────────────────────────────
 
 create table if not exists lead_scores (
-  id             uuid        primary key default uuid_generate_v4(),
+  id             uuid        primary key default gen_random_uuid(),
   lead_id        uuid        not null unique references leads (id) on delete cascade,
   overall_score  numeric(4,1) not null,
   service_match  numeric(4,1) not null default 0,
@@ -92,7 +86,7 @@ create table if not exists lead_scores (
 -- ─────────────────────────────────────────────────────────────────────────────
 
 create table if not exists outreach_drafts (
-  id            uuid        primary key default uuid_generate_v4(),
+  id            uuid        primary key default gen_random_uuid(),
   lead_id       uuid        not null references leads (id) on delete cascade,
   subject       text        not null,
   body          text        not null,
@@ -108,7 +102,7 @@ create table if not exists outreach_drafts (
 -- ─────────────────────────────────────────────────────────────────────────────
 
 create table if not exists suppression_entries (
-  id          uuid        primary key default uuid_generate_v4(),
+  id          uuid        primary key default gen_random_uuid(),
   user_id     uuid        not null references auth.users (id) on delete cascade,
   type        text        not null check (type in ('domain','email','source')),
   value       text        not null,
@@ -122,7 +116,7 @@ create table if not exists suppression_entries (
 -- ─────────────────────────────────────────────────────────────────────────────
 
 create table if not exists lead_notes (
-  id          uuid        primary key default uuid_generate_v4(),
+  id          uuid        primary key default gen_random_uuid(),
   lead_id     uuid        not null references leads (id) on delete cascade,
   user_id     uuid        not null references auth.users (id) on delete cascade,
   note        text        not null,
@@ -134,7 +128,7 @@ create table if not exists lead_notes (
 -- ─────────────────────────────────────────────────────────────────────────────
 
 create table if not exists audit_events (
-  id          uuid        primary key default uuid_generate_v4(),
+  id          uuid        primary key default gen_random_uuid(),
   user_id     uuid        not null references auth.users (id) on delete cascade,
   lead_id     uuid        references leads (id) on delete set null,
   event_type  text        not null
