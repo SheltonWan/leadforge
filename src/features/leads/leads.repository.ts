@@ -69,18 +69,43 @@ export async function createLead(
 export async function getLeads(
   supabase: SupabaseDb,
   userId: string,
-  opts: { limit?: number; offset?: number } = {},
+  opts: {
+    limit?: number
+    offset?: number
+    status?: string
+    risk?: string
+    search?: string
+  } = {},
 ): Promise<{ leads: LeadWithSource[]; total: number }> {
   const limit = opts.limit ?? 50
   const offset = opts.offset ?? 0
 
-  const { data, error, count } = await supabase
+  let query = supabase
     .from('leads')
     .select('*, lead_sources(risk_level, source_type)', { count: 'exact' })
     .eq('user_id', userId)
+
+  if (opts.status && opts.status !== 'all') {
+    query = query.eq(
+      'status',
+      opts.status as Database['public']['Tables']['leads']['Row']['status'],
+    )
+  }
+  if (opts.search) {
+    query = query.ilike('title', `%${opts.search}%`)
+  }
+
+  const { data, error, count } = await query
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1)
 
   if (error) throw error
-  return { leads: (data ?? []) as LeadWithSource[], total: count ?? 0 }
+
+  // Client-side risk filter (risk is on the joined lead_sources row)
+  let leads = (data ?? []) as LeadWithSource[]
+  if (opts.risk && opts.risk !== 'all') {
+    leads = leads.filter((l) => l.lead_sources?.risk_level === opts.risk)
+  }
+
+  return { leads, total: count ?? 0 }
 }

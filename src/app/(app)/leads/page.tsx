@@ -1,9 +1,11 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import { getLeads } from '@/features/leads/leads.repository'
 import type { LeadWithSource } from '@/features/leads/leads.repository'
 import { EmptyState } from '@/shared/components/EmptyState'
+import { LeadsFilterBar } from '@/features/leads/components/LeadsFilterBar'
 
 export const metadata: Metadata = { title: '商机线索' }
 
@@ -89,7 +91,16 @@ function LeadRow({ lead }: { lead: LeadWithSource }) {
   )
 }
 
-export default async function LeadsPage() {
+export default async function LeadsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string; risk?: string; search?: string; page?: string }>
+}) {
+  const { status, risk, search, page } = await searchParams
+  const currentPage = Math.max(1, parseInt(page ?? '1', 10))
+  const limit = 50
+  const offset = (currentPage - 1) * limit
+
   const supabase = await createClient()
   const {
     data: { user },
@@ -99,14 +110,22 @@ export default async function LeadsPage() {
   let total = 0
 
   if (user) {
-    const result = await getLeads(supabase, user.id).catch(() => ({ leads: [], total: 0 }))
+    const result = await getLeads(supabase, user.id, {
+      limit,
+      offset,
+      status,
+      risk,
+      search,
+    }).catch(() => ({ leads: [], total: 0 }))
     leads = result.leads
     total = result.total
   }
 
+  const hasFilters = !!(status || risk || search)
+
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-4 flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold text-gray-900">商机线索</h1>
           {total > 0 && <p className="mt-0.5 text-sm text-gray-500">共 {total} 条</p>}
@@ -119,11 +138,21 @@ export default async function LeadsPage() {
         </Link>
       </div>
 
+      <div className="mb-5">
+        <Suspense fallback={null}>
+          <LeadsFilterBar />
+        </Suspense>
+      </div>
+
       {leads.length === 0 ? (
         <EmptyState
-          title="暂无线索"
-          description="请手动录入或批量上传 CSV。LeadForge 仅处理公开授权来源的信息，不支持抓取非公开联系方式。"
-          action={{ label: '添加线索', href: '/leads/import' }}
+          title={hasFilters ? '无匹配线索' : '暂无线索'}
+          description={
+            hasFilters
+              ? '尝试调整筛选条件。'
+              : '请手动录入或批量上传 CSV。LeadForge 仅处理公开授权来源的信息，不支持抓取非公开联系方式。'
+          }
+          action={hasFilters ? undefined : { label: '添加线索', href: '/leads/import' }}
         />
       ) : (
         <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { leadCreateSchema } from '@/features/leads/leads.types'
 import { createLead, getLeads } from '@/features/leads/leads.repository'
+import { scoreLead } from '@/features/scoring/scoring.service'
 
 export async function GET(request: Request) {
   try {
@@ -72,6 +73,12 @@ export async function POST(request: Request) {
     }
 
     const lead = await createLead(supabase, user.id, parsed.data)
+
+    // Fire-and-forget: score the new lead asynchronously; do not fail the request if it errors
+    scoreLead(supabase, user.id, lead.id, parsed.data.risk_level).catch((err: unknown) => {
+      console.error('[auto-score] scoreLead failed:', err)
+    })
+
     return NextResponse.json({ lead }, { status: 201 })
   } catch {
     return NextResponse.json(
