@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getLeads } from '@/features/leads/leads.repository'
 import type { LeadWithSource } from '@/features/leads/leads.repository'
 import { EmptyState } from '@/shared/components/EmptyState'
+import { Pagination } from '@/shared/components/Pagination'
 import { LeadsFilterBar } from '@/features/leads/components/LeadsFilterBar'
 
 export const metadata: Metadata = { title: '商机线索' }
@@ -122,6 +123,20 @@ export default async function LeadsPage({
   }
 
   const hasFilters = !!(status || risk || search)
+  const totalPages = Math.max(1, Math.ceil(total / limit))
+
+  function buildPageHref(p: number): string {
+    const sp = new URLSearchParams()
+    if (status) sp.set('status', status)
+    if (risk) sp.set('risk', risk)
+    if (search) sp.set('search', search)
+    if (p > 1) sp.set('page', String(p))
+    const qs = sp.toString()
+    return `/leads${qs ? `?${qs}` : ''}`
+  }
+
+  const firstItem = total === 0 ? 0 : offset + 1
+  const lastItem = Math.min(offset + limit, total)
 
   return (
     <div>
@@ -176,6 +191,13 @@ export default async function LeadsPage({
               ))}
             </tbody>
           </table>
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            prevHref={currentPage > 1 ? buildPageHref(currentPage - 1) : null}
+            nextHref={currentPage < totalPages ? buildPageHref(currentPage + 1) : null}
+            summary={`第 ${firstItem}–${lastItem} 条，共 ${total} 条`}
+          />
         </div>
       )}
     </div>
