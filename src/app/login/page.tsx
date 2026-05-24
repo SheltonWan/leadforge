@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { AuthForm } from '@/features/auth/components/AuthForm'
 
 export const metadata: Metadata = {
   title: '登录',
@@ -13,15 +14,7 @@ export default function LoginPage() {
           <p className="mt-1 text-sm text-gray-500">合规 B2B 商机雷达</p>
         </div>
 
-        {/* Supabase Auth UI — will be implemented alongside T-005 user profile work */}
-        <div
-          className="rounded-lg border border-dashed border-gray-300 p-8 text-center"
-          role="status"
-          aria-label="登录表单加载中"
-        >
-          <p className="text-sm text-gray-400">Supabase Auth UI</p>
-          <p className="mt-1 text-xs text-gray-400">将在 T-005 服务档案实现时接入</p>
-        </div>
+        <AuthForm />
       </div>
     </main>
   )
