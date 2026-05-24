@@ -20,11 +20,11 @@ export async function createClient() {
         },
         setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
           try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options),
-            )
+            for (const { name, value, options } of cookiesToSet) {
+              cookieStore.set(name, value, options)
+            }
           } catch {
-            // setAll called from a Server Component — the session will be
+            // setAll called from a Server Component — session will be
             // refreshed by middleware on the next request.
           }
         },
