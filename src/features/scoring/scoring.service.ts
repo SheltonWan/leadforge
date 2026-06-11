@@ -52,6 +52,8 @@ export async function scoreLead(
     max_budget: null,
     case_snippets: '',
     locale: 'zh-CN',
+    zbj_username: null,
+    zbj_password_enc: null,
     created_at: '',
     updated_at: '',
   }

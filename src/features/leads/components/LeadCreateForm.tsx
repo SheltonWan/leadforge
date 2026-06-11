@@ -13,6 +13,7 @@ const SOURCE_TYPE_LABELS: Record<LeadCreateData['source_type'], string> = {
   csv_import: 'CSV 导入',
   public_source: '公开来源',
   mock_adapter: '模拟适配器',
+  web_scraper: '网页爬取',
 }
 
 const COLLECTION_METHOD_LABELS: Record<LeadCreateData['collection_method'], string> = {
@@ -20,6 +21,7 @@ const COLLECTION_METHOD_LABELS: Record<LeadCreateData['collection_method'], stri
   csv_import: 'CSV 文件',
   rss: 'RSS 订阅',
   public_api: '公开 API',
+  web_scraper: '网页爬取',
 }
 
 const RISK_LEVEL_OPTIONS: { value: LeadCreateData['risk_level']; label: string; desc?: string }[] =

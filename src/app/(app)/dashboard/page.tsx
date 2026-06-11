@@ -48,7 +48,7 @@ export default async function DashboardPage() {
           </p>
           <div className="mt-6 flex gap-3">
             <Link
-              href="/leads/new"
+              href="/leads/import"
               className="rounded-md bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-1"
             >
               添加线索
@@ -143,7 +143,7 @@ export default async function DashboardPage() {
           {/* Quick actions */}
           <section aria-label="快捷操作" className="mt-8 flex flex-wrap gap-3">
             <Link
-              href="/leads/new"
+              href="/leads/import"
               className="rounded-md bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-1"
             >
               添加线索

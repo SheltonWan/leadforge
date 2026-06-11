@@ -3,12 +3,16 @@
 import { useState } from 'react'
 import { LeadCreateForm } from './LeadCreateForm'
 import { CsvImport } from './CsvImport'
+import { ZbjAutoImport } from './ZbjAutoImport'
+import { ZbjHtmlImport } from './ZbjHtmlImport'
 
-type Tab = 'manual' | 'csv'
+type Tab = 'manual' | 'csv' | 'zbj' | 'zbj-html'
 
 const TABS: { id: Tab; label: string; desc: string }[] = [
   { id: 'manual', label: '手动录入', desc: '逐条填写线索信息' },
   { id: 'csv', label: 'CSV 批量导入', desc: '上传表格批量导入' },
+  { id: 'zbj', label: '猪八戒自动采集', desc: '账号登录，一键抓取' },
+  { id: 'zbj-html', label: '猪八戒源码导入', desc: '粘贴页面源码（备用）' },
 ]
 
 function cls(...args: (string | false | undefined)[]) {
@@ -66,7 +70,15 @@ export function ImportTabs() {
           aria-labelledby={`tab-${tab.id}`}
           hidden={activeTab !== tab.id}
         >
-          {tab.id === 'manual' ? <LeadCreateForm /> : <CsvImport />}
+          {tab.id === 'manual' ? (
+            <LeadCreateForm />
+          ) : tab.id === 'zbj' ? (
+            <ZbjAutoImport />
+          ) : tab.id === 'zbj-html' ? (
+            <ZbjHtmlImport />
+          ) : (
+            <CsvImport />
+          )}
         </div>
       ))}
     </div>

@@ -13,6 +13,7 @@ const SOURCE_TYPE_LABELS = {
   manual: '手动录入',
   public_source: '公开来源',
   mock_adapter: '模拟适配器',
+  web_scraper: '网页爬取',
 } as const
 
 const RISK_BADGES = {

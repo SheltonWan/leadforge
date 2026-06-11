@@ -18,6 +18,8 @@ export type Database = {
           max_budget: number | null
           case_snippets: string
           locale: string
+          zbj_username: string | null
+          zbj_password_enc: string | null
           created_at: string
           updated_at: string
         }
@@ -32,6 +34,8 @@ export type Database = {
           max_budget?: number | null
           case_snippets?: string
           locale?: string
+          zbj_username?: string | null
+          zbj_password_enc?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -46,6 +50,8 @@ export type Database = {
           max_budget?: number | null
           case_snippets?: string
           locale?: string
+          zbj_username?: string | null
+          zbj_password_enc?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -57,9 +63,9 @@ export type Database = {
           id: string
           user_id: string
           name: string
-          source_type: 'csv_import' | 'manual' | 'public_source' | 'mock_adapter'
+          source_type: 'csv_import' | 'manual' | 'public_source' | 'mock_adapter' | 'web_scraper'
           url: string | null
-          collection_method: 'manual_copy' | 'csv_import' | 'rss' | 'public_api'
+          collection_method: 'manual_copy' | 'csv_import' | 'rss' | 'public_api' | 'web_scraper'
           tos_note: string | null
           risk_level: 'low' | 'medium' | 'high'
           enabled: boolean
@@ -69,9 +75,9 @@ export type Database = {
           id?: string
           user_id: string
           name: string
-          source_type: 'csv_import' | 'manual' | 'public_source' | 'mock_adapter'
+          source_type: 'csv_import' | 'manual' | 'public_source' | 'mock_adapter' | 'web_scraper'
           url?: string | null
-          collection_method: 'manual_copy' | 'csv_import' | 'rss' | 'public_api'
+          collection_method: 'manual_copy' | 'csv_import' | 'rss' | 'public_api' | 'web_scraper'
           tos_note?: string | null
           risk_level?: 'low' | 'medium' | 'high'
           enabled?: boolean
@@ -81,9 +87,9 @@ export type Database = {
           id?: string
           user_id?: string
           name?: string
-          source_type?: 'csv_import' | 'manual' | 'public_source' | 'mock_adapter'
+          source_type?: 'csv_import' | 'manual' | 'public_source' | 'mock_adapter' | 'web_scraper'
           url?: string | null
-          collection_method?: 'manual_copy' | 'csv_import' | 'rss' | 'public_api'
+          collection_method?: 'manual_copy' | 'csv_import' | 'rss' | 'public_api' | 'web_scraper'
           tos_note?: string | null
           risk_level?: 'low' | 'medium' | 'high'
           enabled?: boolean

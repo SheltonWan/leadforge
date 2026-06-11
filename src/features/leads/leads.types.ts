@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
-const SOURCE_TYPES = ['manual', 'csv_import', 'public_source', 'mock_adapter'] as const
-const COLLECTION_METHODS = ['manual_copy', 'csv_import', 'rss', 'public_api'] as const
+const SOURCE_TYPES = ['manual', 'csv_import', 'public_source', 'mock_adapter', 'web_scraper'] as const
+const COLLECTION_METHODS = ['manual_copy', 'csv_import', 'rss', 'public_api', 'web_scraper'] as const
 const RISK_LEVELS = ['low', 'medium', 'high'] as const
 
 export const leadCreateSchema = z.object({

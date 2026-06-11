@@ -38,6 +38,8 @@ function makeProfile(
     max_budget: 300000,
     case_snippets: '',
     locale: 'zh-CN',
+    zbj_username: null,
+    zbj_password_enc: null,
     created_at: '2026-01-01T00:00:00Z',
     updated_at: '2026-01-01T00:00:00Z',
     ...overrides,
