@@ -95,26 +95,23 @@ function FactorBar({
   invert?: boolean
 }) {
   const pct = Math.min(100, Math.max(0, value))
-  const barCls = invert
-    ? 'bg-red-400'
+  const trackColor = invert
+    ? '[&::-webkit-progress-value]:bg-red-400 [&::-moz-progress-bar]:bg-red-400'
     : pct >= 70
-      ? 'bg-green-500'
+      ? '[&::-webkit-progress-value]:bg-green-500 [&::-moz-progress-bar]:bg-green-500'
       : pct >= 40
-        ? 'bg-amber-400'
-        : 'bg-red-400'
+        ? '[&::-webkit-progress-value]:bg-amber-400 [&::-moz-progress-bar]:bg-amber-400'
+        : '[&::-webkit-progress-value]:bg-red-400 [&::-moz-progress-bar]:bg-red-400'
+
   return (
     <div className="flex items-center gap-3">
       <span className="w-20 shrink-0 text-xs text-gray-500">{label}</span>
-      <div
-        className="h-2 flex-1 overflow-hidden rounded-full bg-gray-100"
-        role="progressbar"
-        aria-valuenow={pct}
-        aria-valuemin={0}
-        aria-valuemax={100}
+      <progress
+        value={pct}
+        max={100}
+        className={`h-2 flex-1 rounded-full overflow-hidden [&::-webkit-progress-bar]:rounded-full [&::-webkit-progress-bar]:bg-gray-100 ${trackColor}`}
         aria-label={`${label} ${pct}`}
-      >
-        <div className={`h-full rounded-full ${barCls}`} style={{ width: `${pct}%` }} />
-      </div>
+      />
       <span className="w-8 shrink-0 text-right text-xs font-medium text-gray-700">
         {invert ? '−' : ''}{value}
       </span>
